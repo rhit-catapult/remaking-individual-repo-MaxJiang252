@@ -73,7 +73,9 @@ class Hero:
     def hit_by(self, raindrop):
         """ Returns true if the given raindrop is hitting this Hero, otherwise false. """
         # TODO 19: Return True if this Hero is currently colliding with the given Raindrop.
-        my_hit_box = pygame.Rect(self.x, self.y, self.image_no_umbrella.get_width(), self.image_no_umbrella.get_height())
+        my_hit_box = pygame.Rect(self.x, self.y, 
+                                 self.image_no_umbrella.get_width(), 
+                                 self.image_no_umbrella.get_height())
         return my_hit_box.collidepoint(raindrop.x, raindrop.y + 5)
 
 
@@ -97,7 +99,7 @@ class Cloud:
     def draw(self):
         """ Draws this sprite onto the screen. """
         # TODO 25: Draw (blit) this Cloud's image at its current position.
-        pass
+        self.screen.blit(self.image, (self.x, self.y))
 
     def rain(self):
         """ Adds a Raindrop to the array of raindrops so that it looks like the Cloud is raining. """
@@ -105,8 +107,10 @@ class Cloud:
         #     where the new Raindrop starts at:
         #       - x is a random integer between this Cloud's x and this Cloud's x + 300.
         #       - y is this Cloud's y + 100.
-        pass
-
+        new_raindrop = Raindrop(self.screen, 
+                                random.randint(self.x + 10, self.x + self.image.get_width() - 10), 
+                                self.y + self.image.get_height() - 10)
+        self.raindrops.append(new_raindrop)
 
 def main():
     print("main is called")
@@ -118,7 +122,6 @@ def main():
     pygame.display.set_caption("Rainy Days")
     # TODO 2: Make a Clock
     clock = pygame.time.Clock()
-    test_drop = Raindrop(screen, 310, 10)
     mike = Hero(
         screen,
         200,
@@ -138,6 +141,7 @@ def main():
     # TODO 15: Make a Hero, named mike, with appropriate images, starting at position x=200 y=400.
     # TODO 15: Make a Hero, named alyssa, with appropriate images, starting at position x=700 y=400.
     # TODO 23: Make a Cloud, named cloud, with appropriate images, starting at position x=300 y=50.
+    cloud = Cloud(screen, 300, 50, os.path.join(asset_folder, "cloud.png"))
     while True:
         clock.tick(60)
         for event in pygame.event.get():
@@ -146,7 +150,16 @@ def main():
             
     # TODO 3: Enter the game loop, with a clock tick of 60 (or so) at each iteration.
         # TODO 4:   Make the pygame.QUIT event stop the game.
-
+        pressed_keys = pygame.key.get_pressed()
+        if pressed_keys[pygame.K_RIGHT]:
+            cloud.x += 10
+        if pressed_keys[pygame.K_LEFT]:
+            cloud.x -= 10
+        if pressed_keys[pygame.K_UP]:
+            cloud.y -= 10
+        if pressed_keys[pygame.K_DOWN]:
+            cloud.y += 10
+            
         # TODO 27: Inside the game loop (AFTER the events loop above), get the list of keys that are currently pressed.
         #     Arrange so that the Cloud moves:
         #       5 pixels (or 10 pixels) to the right if the Right Arrow key (pygame.K_RIGHT) is pressed.
@@ -161,32 +174,32 @@ def main():
         
         # --- begin area of test_drop code that will be removed later
         # TODO 12: As a temporary test, move test_drop
-        test_drop.move()
-        if test_drop.off_screen():
-            test_drop.y = 10
-        test_drop.draw()
+        
         # TODO 14: As a temporary test, check if test_drop is off screen, if so reset the y position to 10
         # TODO 10: As a temporary test, draw test_drop
-        test_drop.draw()
+        
         # TODO 20: As a temporary test, check if test_drop is hitting Mike (or Alyssa), if so set their last_hit_time
-        if mike.hit_by(test_drop):
-            mike.last_hit_time = time.time()
-            test_drop.x = 720
-            test_drop.y = 0
-            
-        if alyssa.hit_by(test_drop):
-            alyssa.last_hit_time = time.time()
-            test_drop.x = 310
-            test_drop.y = 0
+        
         # TODO 22: Remove the code that reset the y of the test_drop when off_screen()
         #          Instead reset the test_drop y to 10 when mike is hit, additionally set the x to 750
         #          Then add similar code to alyssa that sets her last_hit_time and moves the test_drop to 10 320
         # --- end area of test_drop code that will be removed later
 
         # TODO 26: Draw the Cloud.
-
+        cloud.draw()
         # TODO 29: Remove the temporary testdrop code from this function and refactor it as follows:
         # TODO: Make the Cloud "rain", then:
+        cloud.rain()
+        for raindrop in cloud.raindrops:
+            raindrop.move()
+            raindrop.draw()
+            if mike.hit_by(raindrop):
+                mike.last_hit_time = time.time()
+                cloud.raindrops.remove(raindrop)
+            if alyssa.hit_by(raindrop):
+                alyssa.last_hit_time = time.time()
+                cloud.raindrops.remove(raindrop)
+        
         # TODO    For each Raindrop in the Cloud's list of raindrops:
             #       - move the Raindrop.
             #       - draw the Raindrop.
